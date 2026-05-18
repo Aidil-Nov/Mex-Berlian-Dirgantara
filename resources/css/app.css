@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        /* Memberikan jarak atas agar judul section tidak tertutup oleh navbar yang fixed */
+        scroll-padding-top: 100px;
+    }
+    @import "remixicon/fonts/remixicon.css";
+};
