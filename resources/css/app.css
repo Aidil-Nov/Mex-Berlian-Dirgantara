@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
     html {
         scroll-behavior: smooth;
@@ -10,4 +9,4 @@
         scroll-padding-top: 100px;
     }
     @import "remixicon/fonts/remixicon.css";
-};
+}
