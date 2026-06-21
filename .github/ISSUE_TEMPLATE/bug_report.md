@@ -1,3 +1,11 @@
+---
+name: 🐛 Bug Report
+about: Laporkan kutu (bug), error sistem, atau keanehan layout di lapangan.
+title: "[BUG] "
+labels: bug
+assignees: ""
+---
+
 # 📋 Project Issue Tracker & Backlog - PT MEX Berlian Dirgantara
 
 Dokumen ini digunakan untuk melacak daftar tugas (_To-Do Lists_), perbaikan kutu (_Bug Fixes_), penanganan celah keamanan (_Security Safeguards_), dan rencana pengembangan fitur selanjutnya pada Sistem Informasi Integrasi Kargo Udara.
