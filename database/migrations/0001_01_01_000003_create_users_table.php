@@ -12,11 +12,12 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('nama');
+            $table->string('username')->unique();
+            $table->string('email')->unique()->nullable(); // Bawaan Breeze (opsional jika login pakai username)
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('user');
+            $table->enum('role', ['manajer_cabang', 'admin_operasional'])->default('admin_operasional');
             $table->rememberToken();
             $table->timestamps();
         });
