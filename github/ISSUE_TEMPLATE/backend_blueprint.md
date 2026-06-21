@@ -124,6 +124,74 @@ Daftar checklist implementasi dan pengujian modul backend untuk kesiapan sistem:
 -   [ ] Pengujian beban integrasi _Aviationstack API_ saat status penerbangan berubah menjadi `Landed` atau `Active`.
 -   [ ] Implementasi pembatasan hak akses (_Middleware Role_) antara Admin Operasional dan Manajer Cabang.
 
+## 🧩 4. Rancangan Use Case Diagram (PlantUML Blueprint)
+
+Bagian ini mendokumentasikan hubungan interaksi antara aktor (Admin Operasional, Guest/Customer, dan Manajer Cabang) terhadap fungsi-fungsi utama di dalam Sistem Informasi Kargo Udara PT MEX Berlian Dirgantara.
+
+### A. Kode Komponen PlantUML Use Case
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorThickness 2
+skinparam rectangleBorderThickness 1.5
+
+actor "Admin Operasional" as admin
+actor "Guest / Customer" as guest
+actor "Manajer Cabang" as manager
+
+rectangle "Sistem Informasi Kargo Udara PT MEX" {
+
+    '--- Core Authentication ---
+    usecase "Autentikasi Sistem (Login)" as UC_Login
+
+    '--- Admin Operasional Tasks ---
+    usecase "Kelola Manifest Data Kargo" as UC_Manifest
+    usecase "Update Status Pengiriman (State Machine)" as UC_Status
+    usecase "Pilih Maskapai Penerbangan" as UC_Radar
+    usecase "Catat Komplain Customer" as UC_Komplain
+    usecase "Verifikasi Validitas Nomor Resi (Fetch API)" as UC_CekResi
+    usecase "Ekspor Laporan Operasional Kargo" as UC_Laporan
+
+    '--- Guest / Customer Tasks ---
+    usecase "Lacak Posisi Kargo (Public Tracking)" as UC_Tracking
+    usecase "Otentikasi 4 Digit Nomor Telepon" as UC_VerifyPhone
+
+    '--- Manajer Cabang Tasks ---
+    usecase "Review & Input Solusi Komplain" as UC_Solusi
+    usecase "Monitoring Dashboard & Laporan" as UC_Monitor
+}
+
+'--- Admin Relationships ---
+admin --> UC_Login
+admin --> UC_Manifest
+admin --> UC_Status
+admin --> UC_Komplain
+admin --> UC_Laporan
+
+'--- Admin Includes ---
+UC_Status ..> UC_Radar : <<include>>
+note on UC_Radar
+  Sistem otomatis melakukan Fallback
+  ke Local DB jika API Radar Limit/Mati
+end note
+
+UC_Komplain ..> UC_CekResi : <<include>>
+
+'--- Guest Relationships ---
+guest --> UC_Tracking
+UC_Tracking ..> UC_VerifyPhone : <<include>>
+
+'--- Manager Relationships ---
+manager --> UC_Login
+manager --> UC_Solusi
+manager --> UC_Monitor
+
+@endum
+
 ---
 
 _Dokumentasi Backend ini diselaraskan dengan arsitektur sistem terbaru per Juni 2026._
+```
