@@ -1,3 +1,5 @@
+import defaultTheme from "tailwindcss/defaultTheme";
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: [
@@ -6,7 +8,7 @@ module.exports = {
         "./resources/**/*.vue",
         // Pastikan path ini ada agar komponen button.blade.php yang baru kita buat ikut terbaca
         "./resources/views/components/**/*.blade.php",
-        "./index.html",
+        "./index.html"
     ],
     theme: {
         extend: {
@@ -19,13 +21,13 @@ module.exports = {
                 red: "#D62828",
                 redhover: "#C12424",
                 redactive: "#C12424",
-                accent: "#e8eaf4",
+                accent: "#e8eaf4"
             },
             // Setup Custom Fonts
             fontFamily: {
-                sans: ["Inter", "sans-serif"],
+                sans: ["Inter", "sans-serif", defaultTheme.fontFamily.sans],
                 primary: ["Poppins", "sans-serif"],
-                secondary: ["Lora", "serif"],
+                secondary: ["Lora", "serif"]
             },
             fontSize: {
                 // Format: ['ukuran-font', 'line-height']
@@ -38,9 +40,9 @@ module.exports = {
                 "4xl": ["36px", "48px"],
                 "5xl": ["48px", "63px"], // Judul Section (Lacak Kargo, FAQ, Tentang Kami)
                 "6xl": ["60px", "72px"],
-                hero: ["96px", "118px"], // Khusus untuk Judul Utama di Hero Section
-            },
-        },
+                hero: ["96px", "118px"] // Khusus untuk Judul Utama di Hero Section
+            }
+        }
     },
-    plugins: [],
+    plugins: []
 };

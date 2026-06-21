@@ -1,41 +1,6 @@
-@extends('layouts.guest')
+@extends('layouts.frontend')
 
 @section('content')
-
-    @php
-        $riwayatKargo = [
-            [
-                'tanggal' => '10/05/2026',
-                'jam' => '16:30',
-                'desc' => 'Paket telah diterima oleh [Nama Penerima] di alamat tujuan.'
-            ],
-            [
-                'tanggal' => '10/05/2026',
-                'jam' => '13:15',
-                'desc' => 'Pesawat telah mendarat di Bandara tujuan. Barang sedang dalam proses bongkar muat (unloading).'
-            ],
-            [
-                'tanggal' => '10/05/2026',
-                'jam' => '10:00',
-                'desc' => 'Kargo sedang dalam penerbangan menuju kota tujuan menggunakan maskapai mitra.'
-            ],
-            [
-                'tanggal' => '10/05/2026',
-                'jam' => '08:30',
-                'desc' => 'Barang telah divalidasi dan sedang dimuat ke dalam pesawat.'
-            ],
-            [
-                'tanggal' => '10/05/2026',
-                'jam' => '06:45',
-                'desc' => 'Pemeriksaan keamanan mandiri selesai dilakukan oleh fasilitas Regulated Agent PT MEX.'
-            ],
-            [
-                'tanggal' => '09/05/2026',
-                'jam' => '05:20',
-                'desc' => 'Barang telah diterima di Unit Kargo Bandara Supadio dan data telah masuk ke manifes sistem.'
-            ],
-        ];
-    @endphp
 
     <section class="relative w-full py-16 md:py-24 flex flex-col justify-center items-center overflow-hidden">
 
@@ -66,7 +31,7 @@
                 <div class="pl-4 pr-2 text-slate-400">
                     <i class="ri-search-line text-2xl"></i>
                 </div>
-                <input type="text" name="no_resi" value="{{ $no_resi ?? request('no_resi') }}"
+                <input type="text" name="no_resi" value="{{ $no_resi ?? '' }}"
                     placeholder="Masukkan ID Resi..."
                     class="flex-1 bg-transparent text-black text-lg font-medium font-['Poppins'] focus:outline-none border-none px-2 uppercase"
                     required />
@@ -76,46 +41,46 @@
                 </button>
             </form>
 
+            {{-- STEPPER GRAPHIC PROGRESS BAR (DINAMIS BERDASARKAN STATUS TERAKHIR) --}}
             <div class="w-full max-w-3xl relative mt-8 md:mt-12">
                 <div class="absolute top-8 left-16 right-16 border-t-2 border-dotted border-white/70 z-0 hidden md:block">
                 </div>
 
+                @php
+                    $status = strtolower($kargo->status_terakhir);
+                    $isXray = in_array($status, ['x-ray', 'loading', 'on flight', 'landing', 'selesai', 'di terima']);
+                    $isFlight = in_array($status, ['loading', 'on flight', 'landing', 'selesai', 'di terima']);
+                    $isDone = in_array($status, ['selesai', 'di terima']);
+                @endphp
+
                 <div class="relative z-10 flex flex-wrap md:flex-nowrap justify-between items-start w-full gap-8 md:gap-0">
 
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4">
-                        <div
-                            class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/30">
+                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 opacity-100">
+                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/30">
                             <i class="ri-login-box-line text-3xl"></i>
                         </div>
-                        <span
-                            class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Penerimaan<br>Kargo</span>
+                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Penerimaan<br>Kargo</span>
                     </div>
 
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4">
-                        <div
-                            class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/30">
+                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 {{ $isXray ? 'opacity-100' : 'opacity-40' }}">
+                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isXray ? 'ring-[6px] ring-white/30' : '' }}">
                             <i class="ri-shield-check-line text-3xl"></i>
                         </div>
-                        <span
-                            class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Pemeriksaan</span>
+                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Pemeriksaan<br>Bandara</span>
                     </div>
 
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4">
-                        <div
-                            class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/30">
-                            <i class="ri-truck-line text-3xl"></i>
+                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 {{ $isFlight ? 'opacity-100' : 'opacity-40' }}">
+                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isFlight ? 'ring-[6px] ring-white/30' : '' }}">
+                            <i class="ri-plane-line text-3xl"></i>
                         </div>
-                        <span
-                            class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Pengiriman</span>
+                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Proses<br>Penerbangan</span>
                     </div>
 
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4">
-                        <div
-                            class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/30">
+                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 {{ $isDone ? 'opacity-100' : 'opacity-40' }}">
+                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isDone ? 'ring-[6px] ring-white/30' : '' }}">
                             <i class="ri-focus-3-line text-3xl"></i>
                         </div>
-                        <span
-                            class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Diterima</span>
+                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Kargo<br>Diterima</span>
                     </div>
 
                 </div>
@@ -123,25 +88,52 @@
         </div>
     </section>
 
-    <section class="w-full max-w-4xl mx-auto px-4 py-16 flex flex-col items-center gap-12">
+    <section class="w-full max-w-4xl mx-auto px-4 py-12 flex flex-col items-center gap-8">
 
         <div class="px-8 py-2 bg-[#1e3a8a] rounded-full shadow-md">
-            <span class="text-white text-base md:text-lg font-semibold font-['Poppins'] tracking-wide">Detail</span>
+            <span class="text-white text-base md:text-lg font-semibold font-['Poppins'] tracking-wide">Detail Pengiriman</span>
         </div>
 
+        {{-- Panel Ringkasan Manifes Data Kargo --}}
+        <div class="w-full max-w-2xl bg-slate-50 border border-slate-200 rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm font-['Poppins'] shadow-sm">
+            <div><span class="text-slate-500 text-xs block">Rute Pengiriman:</span> <span class="font-semibold text-slate-800">{{ $kargo->kotaAsal->nama_kota }} &rarr; {{ $kargo->kotaTujuan->nama_kota }}</span></div>
+            <div><span class="text-slate-500 text-xs block">Berat Barang:</span> <span class="font-semibold text-slate-800">{{ $kargo->berat }} kg</span></div>
+            <div><span class="text-slate-500 text-xs block">Deskripsi Isi:</span> <span class="font-semibold text-slate-800">{{ $kargo->isi_barang }}</span></div>
+            <div><span class="text-slate-500 text-xs block">Nama Penerima:</span> <span class="font-semibold text-slate-800">{{ $kargo->penerima->nama ?? '-' }}</span></div>
+            
+            @if($kargo->no_penerbangan)
+                <div><span class="text-slate-500 text-xs block">Nomor Armada:</span> <span class="font-semibold text-slate-800 uppercase">{{ $kargo->no_penerbangan }}</span></div>
+                <div>
+                    <span class="text-slate-500 text-xs block">Live Status Radar:</span> 
+                    <span class="font-semibold text-sky-700">
+                        {{ $detailPesawat->status_penerbangan ?? 'Active' }}
+                    </span>
+                </div>
+                @if(isset($detailPesawat->eta))
+                    <div class="col-span-2 sm:col-span-3 bg-sky-50 border border-sky-100 rounded-lg p-3 text-sky-800 text-xs">
+                        <i class="ri-time-line"></i> <strong>Estimasi Tiba (ETA):</strong> {{ $detailPesawat->eta }}
+                    </div>
+                @endif
+            @endif
+        </div>
+
+        {{-- LOG TIMELINE PERGELEKAN STATUS ASLI DARI DATABASE --}}
         <div class="w-full max-w-2xl flex flex-col mt-4">
 
-            @foreach($riwayatKargo as $riwayat)
+            @forelse($kargo->history as $log)
                 <div class="flex items-stretch gap-4 md:gap-8 w-full group">
 
                     <div class="w-24 md:w-32 text-center shrink-0 pt-0.5">
                         <p class="text-black text-xs md:text-sm font-medium font-['Poppins'] leading-relaxed">
-                            {{ $riwayat['tanggal'] }}</p>
-                        <p class="text-black text-xs md:text-sm font-normal font-['Poppins']">{{ $riwayat['jam'] }}</p>
+                            {{ \Carbon\Carbon::parse($log->waktu_update)->format('d/m/Y') }}
+                        </p>
+                        <p class="text-slate-500 text-xs md:text-sm font-normal font-['Poppins']">
+                            {{ \Carbon\Carbon::parse($log->waktu_update)->format('H:i') }} WIB
+                        </p>
                     </div>
 
                     <div class="relative flex flex-col items-center w-6 shrink-0">
-                        <div class="w-4 h-4 md:w-5 md:h-5 bg-white border-2 border-red rounded-full z-10 mt-1 shadow-sm"></div>
+                        <div class="w-4 h-4 md:w-5 md:h-5 bg-white border-2 {{ strtolower($log->status) === 'offload' ? 'border-red-500 bg-red-50' : 'border-red' }} rounded-full z-10 mt-1 shadow-sm"></div>
 
                         @if(!$loop->last)
                             <div class="absolute top-6 bottom-[-16px] w-px border-l-2 border-dotted border-slate-400 z-0"></div>
@@ -149,13 +141,20 @@
                     </div>
 
                     <div class="flex-1 pt-0.5 pb-10">
-                        <p class="text-black text-sm md:text-base font-normal font-['Poppins'] leading-relaxed md:pr-10">
-                            {{ $riwayat['desc'] }}
+                        <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded border mb-1 uppercase {{ strtolower($log->status) === 'offload' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                            {{ $log->status }}
+                        </span>
+                        <p class="text-gray-700 text-sm md:text-base font-normal font-['Poppins'] leading-relaxed md:pr-10">
+                            {{ $log->keterangan }}
                         </p>
                     </div>
 
                 </div>
-            @endforeach
+            @empty
+                <div class="text-center text-slate-400 py-8 italic font-['Poppins'] text-sm">
+                    Belum ada rekaman log perjalanan kargo.
+                </div>
+            @endforelse
 
         </div>
 
