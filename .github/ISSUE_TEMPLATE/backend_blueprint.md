@@ -328,6 +328,67 @@ kargo ||--o{ komplain : "melaporkan masalah resi"
 @endum
 
 
+## 🔁 6. Rancangan Data Flow Diagram (DFD Level 0 Blueprint)
+
+Dokumentasi arsitektur aliran data sistem, interaksi entitas luar, transformasi data proses, serta hak akses baca-tulis (*read-write*) pada repositori penyimpanan database MEX Logistic.
+
+### A. Kode PlantUML DFD Level 0
+@startuml
+!theme plain
+skinparam lineType ortho
+skinparam shadowing false
+skinparam handwritten false
+skinparam rectangleBorderThickness 1.5
+skinparam arrowColor #2b6cb0
+
+'--- External Entities ---
+actor "Admin Operasional" as admin
+actor "Guest / Customer" as guest
+actor "Manajer Cabang" as manager
+component "Aviationstack API\n(Live Flight Radar)" as api
+
+'--- Centralized Data Store ---
+database "Fasilitas Data Store (MySQL):\n- master_kota  - history_status\n- customers    - master_penerbangan\n- kargo         - komplain" as db
+
+rectangle "Fasilitas Utama Sistem Informasi Kargo MEX" as system {
+
+    rectangle "1.0\nRegistrasi & Kelola\nManifest Kargo" as P1
+    rectangle "2.0\nUpdate Status &\nFallback Radar Penerbangan" as P2
+    rectangle "3.0\nPencatatan Keluhan &\nVerifikasi Resi (Fetch API)" as P3
+    rectangle "4.0\nPelacakan Kargo Publik\n& Otentikasi 4 Digit HP" as P4
+    rectangle "5.0\nGenerasi Laporan\nOperasional Kargo" as P5
+}
+
+'--- Aliran Data Proses 1.0 ---
+admin --> P1 : Input data identitas pengirim, penerima,\nberat, & deskripsi isi kargo
+P1 --> db : Aliran data manifest kargo baru\n& auto-generate No. Resi Unik
+
+'--- Aliran Data Proses 2.0 ---
+admin --> P2 : Request update status kargo (Mekanisme State Machine)
+P2 <--> api : Request & sinkronisasi data jadwal live flight radar (IATA code)
+P2 <--> db : Otomatis Fallback data master_penerbangan lokal\njika API limit/terputus
+P2 --> db : Simpan perubahan status_terakhir & log detail ke history_status
+
+'--- Aliran Data Proses 3.0 ---
+admin --> P3 : Input keluhan customer & No. Resi pelapor
+P3 <--> db : Kueri verifikasi validitas resi asinkron (Fetch API backend)
+P3 --> db : Simpan tiket klaim baru (Status awal: Menunggu)
+manager --> P3 : Review berkas & input teks tindakan_solusi keluhan
+P3 --> admin : Sajikan instruksi solusi penanganan komplain (Read-Only)
+
+'--- Aliran Data Proses 4.0 ---
+guest --> P4 : Input No. Resi pencarian & parameter 4 angka terakhir nomor HP
+P4 <--> db : Kueri filtrasi & pencocokan ganda digit HP (Pengirim/Penerima)
+P4 <-- db : Tarik detail manifest rute & linimasa runut waktu log status
+P4 --> guest : Menyajikan detail info kargo, status live radar, & grafik stepper progress
+
+'--- Aliran Data Proses 5.0 ---
+admin --> P5 : Request unduh berkas rekap data kargo (Filter parameter rentang tanggal)
+P5 <-- db : Tarik ringkasan data kargo & manifes operasional hanggar
+P5 --> admin : Output dokumen lembar kerja Excel & cetak dokumen fisik PDF
+
+@endum
+
 ---
 
 _Dokumentasi Backend ini diselaraskan dengan arsitektur sistem terbaru per Juni 2026._
