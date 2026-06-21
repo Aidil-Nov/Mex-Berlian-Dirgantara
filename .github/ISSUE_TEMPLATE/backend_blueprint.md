@@ -199,6 +199,135 @@ manager --> UC_Monitor
 
 @endum
 
+
+## 🗃️ 5. Rancangan Entity Relationship Diagram (ERD Blueprint)
+
+Dokumentasi rancangan arsitektur basis data, tipe data, kunci indeks (PK/FK), serta derajat hubungan kardinalitas antartabel sistem MEX Logistic.
+
+### A. Kode PlantUML ERD
+*(Gunakan block ini untuk merrender visualisasi data schema)*
+@startuml
+!theme plain
+skinparam linetype ortho
+skinparam shadowing false
+skinparam handwritten false
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2b6cb0
+    BorderColor #1e3a8a
+}
+
+entity "users (Pegawai)" as users {
+    * id : BIGINT <<PK>>
+    --
+    nama : VARCHAR(255)
+    email : VARCHAR(255) <<UK>>
+    password : VARCHAR(255)
+    role : ENUM('admin_operasional', 'manajer_cabang')
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "master_kota" as kota {
+    * id : BIGINT <<PK>>
+    --
+    nama_kota : VARCHAR(255)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "customers" as cust {
+    * id : BIGINT <<PK>>
+    --
+    nama : VARCHAR(255)
+    alamat : TEXT
+    no_hp : VARCHAR(20)
+    tipe_cust : ENUM('retail', 'corporate')
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "master_penerbangan" as pesawat {
+    * id : BIGINT <<PK>>
+    --
+    no_penerbangan : VARCHAR(255) <<UK>>
+    maskapai : VARCHAR(255)
+    jenis_pesawat : VARCHAR(255)
+    tipe_pesawat : VARCHAR(255)
+    id_kota_asal : BIGINT <<FK>>
+    id_kota_tujuan : BIGINT <<FK>>
+    status_penerbangan : VARCHAR(255)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "kargo" as kargo {
+    * id : BIGINT <<PK>>
+    --
+    no_resi : VARCHAR(255) <<UK>>
+    id_pengirim : BIGINT <<FK>>
+    id_penerima : BIGINT <<FK>>
+    id_kota_asal : BIGINT <<FK>>
+    id_kota_tujuan : BIGINT <<FK>>
+    berat : INT
+    isi_barang : VARCHAR(255)
+    no_penerbangan : VARCHAR(255) <<FK/Nullable>>
+    maskapai : VARCHAR(255) <<Nullable>>
+    status_terakhir : VARCHAR(255)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "history_status" as history {
+    * id : BIGINT <<PK>>
+    --
+    no_resi : VARCHAR(255) <<FK>>
+    id_user : BIGINT <<FK>>
+    status : VARCHAR(255)
+    keterangan : TEXT
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "komplain" as komplain {
+    * id : BIGINT <<PK>>
+    --
+    id_komplain : VARCHAR(255) <<UK>>
+    no_resi : VARCHAR(255) <<FK>>
+    nama_pelapor : VARCHAR(255)
+    hp_pelapor : VARCHAR(20)
+    email_pelapor : VARCHAR(255) <<Nullable>>
+    kategori : VARCHAR(255)
+    tingkat_keparahan : VARCHAR(255)
+    deskripsi : TEXT
+    estimasi_klaim : VARCHAR(255) <<Nullable>>
+    status : VARCHAR(255)
+    tindakan_solusi : TEXT <<Nullable>>
+    channel : VARCHAR(255)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+'--- Garis Hubungan Relasi (Cardinality) ---
+kota ||--o{ pesawat : "sebagai asal"
+kota ||--o{ pesawat : "sebagai tujuan"
+
+kota ||--o{ kargo : "keberangkatan kargo"
+kota ||--o{ kargo : "tujuan pengiriman"
+
+cust ||--o{ kargo : "bertindak sebagai pengirim"
+cust ||--o{ kargo : "bertindak sebagai penerima"
+
+pesawat |o--o{ kargo : "membawa paket muatan"
+
+kargo ||--|{ history : "melacak kronologi"
+users ||--o{ history : "petugas yang meng-update"
+
+kargo ||--o{ komplain : "melaporkan masalah resi"
+
+@endum
+
+
 ---
 
 _Dokumentasi Backend ini diselaraskan dengan arsitektur sistem terbaru per Juni 2026._
