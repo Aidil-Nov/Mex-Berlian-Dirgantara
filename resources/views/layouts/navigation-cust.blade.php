@@ -73,65 +73,69 @@
                 alt="Logo MEX" />
         </a>
 
-        <!-- Menu Tengah (Desktop Only) dengan relative agar kotak merah tidak keluar jalur -->
+        <!-- Menu Tengah (Desktop Only) -->
         <div
-            class="relative hidden lg:flex px-2 py-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm outline outline-2 outline-offset-[-2px] outline-slate-100 items-center gap-1 transition-all">
+            class="relative hidden lg:flex px-2 py-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm outline outline-2 outline-offset-[-2px] outline-surface-border items-center gap-1 transition-all">
 
-            <!-- INI ADALAH KOTAK MERAH YANG BERGESER -->
-            <!-- Warna dikembalikan ke class custom Anda: bg-red -->
+            <!-- Kotak Merah Sliding -->
             <div class="absolute bg-red rounded-full shadow-md transition-all duration-300 ease-out z-0 pointer-events-none"
                 :style="`left: ${pillLeft}px; top: ${pillTop}px; width: ${pillWidth}px; height: ${pillHeight}px; opacity: ${pillOpacity};`">
             </div>
 
-            <!-- Teks Menu (Z-10 agar posisinya berada di ATAS kotak merah) -->
-            <!-- SEMUA HREF DIUBAH MENJADI ABSOLUTE URL MENGGUNAKAN route('home') -->
-            <!-- Warna hover dikembalikan ke class custom Anda: hover:text-red -->
+            <!-- Teks Menu -->
             <a href="{{ route('home') }}#beranda" x-ref="link_beranda"
                 @click="if(!isTrackingPage) { activeSection = 'beranda'; updatePill() }"
-                :class="activeSection === 'beranda' ? 'text-white' : 'text-gray-800 hover:text-red'"
-                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-['Poppins'] transition-colors duration-300">
+                :class="activeSection === 'beranda' ? 'text-white' : 'text-surface-text hover:text-red'"
+                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-primary transition-colors duration-300">
                 Beranda
             </a>
 
             <a href="{{ route('home') }}#tentang" x-ref="link_tentang"
                 @click="if(!isTrackingPage) { activeSection = 'tentang'; updatePill() }"
-                :class="activeSection === 'tentang' ? 'text-white' : 'text-gray-800 hover:text-red'"
-                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-['Poppins'] transition-colors duration-300">
+                :class="activeSection === 'tentang' ? 'text-white' : 'text-surface-text hover:text-red'"
+                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-primary transition-colors duration-300">
                 Tentang
             </a>
 
             <a href="{{ route('home') }}#layanan" x-ref="link_layanan"
                 @click="if(!isTrackingPage) { activeSection = 'layanan'; updatePill() }"
-                :class="activeSection === 'layanan' ? 'text-white' : 'text-gray-800 hover:text-red'"
-                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-['Poppins'] transition-colors duration-300">
+                :class="activeSection === 'layanan' ? 'text-white' : 'text-surface-text hover:text-red'"
+                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-primary transition-colors duration-300">
                 Layanan
             </a>
 
             <a href="{{ request()->routeIs('tracking.show') ? '#' : route('home') . '#tracking' }}"
                 x-ref="link_tracking" @click="if(!isTrackingPage) { activeSection = 'tracking'; updatePill() }"
-                :class="activeSection === 'tracking' ? 'text-white' : 'text-gray-800 hover:text-red'"
-                class="relative z-10 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-normal font-['Poppins'] transition-colors duration-300">
+                :class="activeSection === 'tracking' ? 'text-white' : 'text-surface-text hover:text-red'"
+                class="relative z-10 flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-normal font-primary transition-colors duration-300">
                 Tracking
             </a>
 
             <a href="{{ route('home') }}#faq" x-ref="link_faq"
                 @click="if(!isTrackingPage) { activeSection = 'faq'; updatePill() }"
-                :class="activeSection === 'faq' ? 'text-white' : 'text-gray-800 hover:text-red'"
-                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-['Poppins'] transition-colors duration-300">
+                :class="activeSection === 'faq' ? 'text-white' : 'text-surface-text hover:text-red'"
+                class="relative z-10 px-6 py-2.5 rounded-full text-sm font-normal font-primary transition-colors duration-300">
                 FAQ
             </a>
         </div>
 
         <!-- Tombol Kontak & Mobile Menu Toggle -->
         <div class="flex items-center gap-4 relative z-20">
+
+            <!-- Tombol Desktop -->
             <div class="hidden lg:block">
-                <x-button color="blue" icon="ri-customer-service-2-fill">
-                    Kontak
-                </x-button>
+                <div class="hidden lg:block">
+                    <x-button
+                        href="https://wa.me/6283149159269?text=Halo%20Admin%20PT%20MEX%20Berlian%20Dirgantara.%20Saya%20ingin%20mengajukan%20komplain%2Fpertanyaan%20dengan%20detail%20form%20sebagai%20berikut%3A%0A%0A*Nama%20Pelapor%3A*%20%0A*No.%20HP%20Pelapor%3A*%20%0A*Email%20Pelapor%20%28Opsional%29%3A*%20%0A*Nomor%20Resi%3A*%20%0A*Kategori%20Komplain%20%28Keterlambatan%20%2F%20Rusak%20%2F%20Hilang%20%2F%20Layanan%29%3A*%20%0A*Tingkat%20Keparahan%20%28Rendah%20%2F%20Sedang%20%2F%20Tinggi%20%2F%20Kritis%29%3A*%20%0A*Estimasi%20Nilai%20Klaim%20%28Opsional%29%3A*%20%0A*Deskripsi%20Lengkap%3A*%20%0A%0AMohon%20bantuannya.%20Terima%20kasih."
+                        target="_blank" color="blue" icon="ri-whatsapp-line">
+                        Kontak Kami
+                    </x-button>
+                </div>
             </div>
 
+            <!-- Hamburger Button -->
             <button @click="mobileMenuOpen = !mobileMenuOpen"
-                class="block lg:hidden p-2 bg-white rounded-full shadow-sm text-gray-800 hover:text-blue focus:outline-none transition-colors">
+                class="block lg:hidden p-2 bg-white rounded-full shadow-sm text-surface-text hover:text-blue focus:outline-none transition-colors">
                 <i :class="mobileMenuOpen ? 'ri-close-line' : 'ri-menu-3-line'"
                     class="text-2xl transition-transform duration-200"></i>
             </button>
@@ -143,35 +147,38 @@
         x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-4" @click.away="mobileMenuOpen = false"
-        class="absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-xl lg:hidden flex flex-col"
+        class="absolute top-full left-0 w-full bg-white border-t border-surface-border shadow-xl lg:hidden flex flex-col"
         style="display: none;">
 
         <div class="flex flex-col px-6 py-6 gap-4">
-            <!-- Warna text active dikembalikan ke class custom Anda: text-red -->
             <a href="{{ route('home') }}#beranda" @click="mobileMenuOpen = false"
-                :class="activeSection === 'beranda' ? 'text-red font-semibold' : 'text-gray-600 font-normal'"
-                class="text-lg font-['Poppins'] transition-colors">Beranda</a>
+                :class="activeSection === 'beranda' ? 'text-red font-semibold' : 'text-surface-muted font-normal'"
+                class="text-lg font-primary transition-colors">Beranda</a>
 
             <a href="{{ route('home') }}#tentang" @click="mobileMenuOpen = false"
-                :class="activeSection === 'tentang' ? 'text-red font-semibold' : 'text-gray-600 font-normal'"
-                class="text-lg font-['Poppins'] transition-colors">Tentang</a>
+                :class="activeSection === 'tentang' ? 'text-red font-semibold' : 'text-surface-muted font-normal'"
+                class="text-lg font-primary transition-colors">Tentang</a>
 
             <a href="{{ route('home') }}#layanan" @click="mobileMenuOpen = false"
-                :class="activeSection === 'layanan' ? 'text-red font-semibold' : 'text-gray-600 font-normal'"
-                class="text-lg font-['Poppins'] transition-colors">Layanan</a>
+                :class="activeSection === 'layanan' ? 'text-red font-semibold' : 'text-surface-muted font-normal'"
+                class="text-lg font-primary transition-colors">Layanan</a>
 
             <a href="{{ request()->routeIs('tracking.show') ? '#' : route('home') . '#tracking' }}"
                 @click="mobileMenuOpen = false"
-                :class="activeSection === 'tracking' ? 'text-red font-semibold' : 'text-gray-600 font-normal'"
-                class="text-lg font-['Poppins'] transition-colors">Tracking</a>
+                :class="activeSection === 'tracking' ? 'text-red font-semibold' : 'text-surface-muted font-normal'"
+                class="text-lg font-primary transition-colors">Tracking</a>
 
             <a href="{{ route('home') }}#faq" @click="mobileMenuOpen = false"
-                :class="activeSection === 'faq' ? 'text-red font-semibold' : 'text-gray-600 font-normal'"
-                class="text-lg font-['Poppins'] transition-colors">FAQ</a>
+                :class="activeSection === 'faq' ? 'text-red font-semibold' : 'text-surface-muted font-normal'"
+                class="text-lg font-primary transition-colors">FAQ</a>
 
-            <hr class="border-gray-100 my-2">
+            <hr class="border-surface-border my-2">
 
-            <x-button class="w-full justify-center" color="blue" icon="ri-customer-service-2-fill">
+            <!-- Tombol Mobile -->
+            <!-- Tombol Mobile -->
+            <x-button
+                href="https://wa.me/6283149159269?text=Halo%20Admin%20PT%20MEX%20Berlian%20Dirgantara.%20Saya%20ingin%20mengajukan%20komplain%2Fpertanyaan%20dengan%20detail%20form%20sebagai%20berikut%3A%0A%0A*Nama%20Pelapor%3A*%20%0A*No.%20HP%20Pelapor%3A*%20%0A*Email%20Pelapor%20%28Opsional%29%3A*%20%0A*Nomor%20Resi%3A*%20%0A*Kategori%20Komplain%20%28Keterlambatan%20%2F%20Rusak%20%2F%20Hilang%20%2F%20Layanan%29%3A*%20%0A*Tingkat%20Keparahan%20%28Rendah%20%2F%20Sedang%20%2F%20Tinggi%20%2F%20Kritis%29%3A*%20%0A*Estimasi%20Nilai%20Klaim%20%28Opsional%29%3A*%20%0A*Deskripsi%20Lengkap%3A*%20%0A%0AMohon%20bantuannya.%20Terima%20kasih."
+                target="_blank" class="w-full justify-center" color="blue" icon="ri-whatsapp-line">
                 Kontak Kami
             </x-button>
         </div>
