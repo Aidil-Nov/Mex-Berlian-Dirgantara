@@ -31,8 +31,7 @@
                 <div class="pl-4 pr-2 text-slate-400">
                     <i class="ri-search-line text-2xl"></i>
                 </div>
-                <input type="text" name="no_resi" value="{{ $no_resi ?? '' }}"
-                    placeholder="Masukkan ID Resi..."
+                <input type="text" name="no_resi" value="{{ $no_resi ?? '' }}" placeholder="Masukkan ID Resi..."
                     class="flex-1 bg-transparent text-black text-lg font-medium font-['Poppins'] focus:outline-none border-none px-2 uppercase"
                     required />
                 <button type="submit"
@@ -41,76 +40,186 @@
                 </button>
             </form>
 
-            {{-- STEPPER GRAPHIC PROGRESS BAR (DINAMIS BERDASARKAN STATUS TERAKHIR) --}}
-            <div class="w-full max-w-3xl relative mt-8 md:mt-12">
-                <div class="absolute top-8 left-16 right-16 border-t-2 border-dotted border-white/70 z-0 hidden md:block">
+            {{-- STEPPER GRAPHIC PROGRESS BAR (VERSI SUPER PRESISI) --}}
+            @if($kargo->history->count() > 0)
+                <div class="w-full max-w-4xl relative mt-8 md:mt-16 px-4 md:px-0 mx-auto">
+
+                    {{-- Garis Penghubung Horizontal (Hanya Desktop) --}}
+                    <div
+                        class="hidden md:block absolute top-8 left-[10%] right-[10%] border-t-[3px] border-dotted border-white/50 z-0">
+                    </div>
+
+                    @php
+                        $status = strtolower($kargo->status_terakhir ?? '');
+                        $isXray = in_array($status, ['x-ray', 'loading', 'on flight', 'landing', 'selesai', 'di terima', 'cargo siap di ambil']);
+                        $isFlight = in_array($status, ['loading', 'on flight', 'landing', 'selesai', 'di terima', 'cargo siap di ambil']);
+                        $isArrived = in_array($status, ['landing', 'selesai', 'di terima', 'cargo siap di ambil']);
+                        $isDone = in_array($status, ['selesai', 'di terima', 'cargo siap di ambil']);
+                    @endphp
+
+                    {{-- Container Utama: Flex baris di desktop, Flex kolom di HP --}}
+                    <div class="relative z-10 flex flex-col md:flex-row justify-between w-full gap-8 md:gap-0">
+
+                        {{-- TAHAP 1: PENERIMAAN --}}
+                        <div
+                            class="relative z-10 flex flex-row md:flex-col items-center justify-start md:justify-center w-full md:w-1/5 gap-4 md:gap-3">
+                            {{-- Garis Penghubung Vertikal (Hanya HP) --}}
+                            <div
+                                class="md:hidden absolute left-[22px] top-[48px] bottom-[-32px] border-l-[3px] border-dotted border-white/50 z-0">
+                            </div>
+
+                            {{-- Ikon --}}
+                            <div
+                                class="w-12 h-12 md:w-16 md:h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/20 shrink-0 z-10">
+                                <i class="ri-login-box-line text-xl md:text-2xl"></i>
+                            </div>
+
+                            {{-- Teks --}}
+                            <div class="text-left md:text-center w-[calc(100%-4rem)] md:w-full">
+                                <span
+                                    class="text-white text-base md:text-sm font-semibold font-['Poppins'] leading-tight block">Penerimaan<br
+                                        class="hidden md:block">Kargo</span>
+                            </div>
+                        </div>
+
+                        {{-- TAHAP 2: X-RAY --}}
+                        <div
+                            class="relative z-10 flex flex-row md:flex-col items-center justify-start md:justify-center w-full md:w-1/5 gap-4 md:gap-3 {{ $isXray ? 'opacity-100' : 'opacity-40' }}">
+                            <div
+                                class="md:hidden absolute left-[22px] top-[48px] bottom-[-32px] border-l-[3px] border-dotted border-white/50 z-0">
+                            </div>
+
+                            <div
+                                class="w-12 h-12 md:w-16 md:h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isXray ? 'ring-[6px] ring-white/20' : '' }} shrink-0 z-10">
+                                <i class="ri-shield-check-line text-xl md:text-2xl"></i>
+                            </div>
+
+                            <div class="text-left md:text-center w-[calc(100%-4rem)] md:w-full">
+                                <span
+                                    class="text-white text-base md:text-sm font-semibold font-['Poppins'] leading-tight block">Pemeriksaan<br
+                                        class="hidden md:block">Bandara</span>
+                            </div>
+                        </div>
+
+                        {{-- TAHAP 3: FLIGHT --}}
+                        <div
+                            class="relative z-10 flex flex-row md:flex-col items-center justify-start md:justify-center w-full md:w-1/5 gap-4 md:gap-3 {{ $isFlight ? 'opacity-100' : 'opacity-40' }}">
+                            <div
+                                class="md:hidden absolute left-[22px] top-[48px] bottom-[-32px] border-l-[3px] border-dotted border-white/50 z-0">
+                            </div>
+
+                            <div
+                                class="w-12 h-12 md:w-16 md:h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isFlight ? 'ring-[6px] ring-white/20' : '' }} shrink-0 z-10">
+                                <i class="ri-plane-line text-xl md:text-2xl"></i>
+                            </div>
+
+                            <div class="text-left md:text-center w-[calc(100%-4rem)] md:w-full">
+                                <span
+                                    class="text-white text-base md:text-sm font-semibold font-['Poppins'] leading-tight block">Proses<br
+                                        class="hidden md:block">Penerbangan</span>
+                            </div>
+                        </div>
+
+                        {{-- TAHAP 4: ARRIVED --}}
+                        <div
+                            class="relative z-10 flex flex-row md:flex-col items-center justify-start md:justify-center w-full md:w-1/5 gap-4 md:gap-3 {{ $isArrived ? 'opacity-100' : 'opacity-40' }}">
+                            <div
+                                class="md:hidden absolute left-[22px] top-[48px] bottom-[-32px] border-l-[3px] border-dotted border-white/50 z-0">
+                            </div>
+
+                            <div
+                                class="w-12 h-12 md:w-16 md:h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isArrived ? 'ring-[6px] ring-white/20' : '' }} shrink-0 z-10">
+                                <i class="ri-building-4-line text-xl md:text-2xl"></i>
+                            </div>
+
+                            <div class="text-left md:text-center w-[calc(100%-4rem)] md:w-full">
+                                <span
+                                    class="text-white text-base md:text-sm font-semibold font-['Poppins'] leading-tight block">Tiba
+                                    di Gudang<br class="hidden md:block">Tujuan</span>
+                            </div>
+                        </div>
+
+                        {{-- TAHAP 5: DONE --}}
+                        <div
+                            class="relative z-10 flex flex-row md:flex-col items-center justify-start md:justify-center w-full md:w-1/5 gap-4 md:gap-3 {{ $isDone ? 'opacity-100' : 'opacity-40' }}">
+                            {{-- Tahap Terakhir Tanpa Garis Bawah --}}
+
+                            <div
+                                class="w-12 h-12 md:w-16 md:h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isDone ? 'ring-[6px] ring-white/20' : '' }} shrink-0 z-10">
+                                <i class="ri-focus-3-line text-xl md:text-2xl"></i>
+                            </div>
+
+                            <div class="text-left md:text-center w-[calc(100%-4rem)] md:w-full">
+                                <span
+                                    class="text-white text-base md:text-sm font-semibold font-['Poppins'] leading-tight block">Cargo
+                                    siap<br class="hidden md:block">di ambil</span>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-
-                @php
-                    $status = strtolower($kargo->status_terakhir);
-                    $isXray = in_array($status, ['x-ray', 'loading', 'on flight', 'landing', 'selesai', 'di terima']);
-                    $isFlight = in_array($status, ['loading', 'on flight', 'landing', 'selesai', 'di terima']);
-                    $isDone = in_array($status, ['selesai', 'di terima']);
-                @endphp
-
-                <div class="relative z-10 flex flex-wrap md:flex-nowrap justify-between items-start w-full gap-8 md:gap-0">
-
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 opacity-100">
-                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg ring-[6px] ring-white/30">
-                            <i class="ri-login-box-line text-3xl"></i>
-                        </div>
-                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Penerimaan<br>Kargo</span>
+            @else
+                {{-- Fallback UI Jika Riwayat Kargo Masih Kosong --}}
+                <div
+                    class="w-full max-w-2xl mt-8 md:mt-12 bg-white/10 border border-white/20 rounded-2xl p-6 md:p-8 backdrop-blur-md shadow-lg flex flex-col items-center justify-center text-center">
+                    <div
+                        class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 text-white animate-pulse">
+                        <i class="ri-loader-2-line text-3xl animate-spin"></i>
                     </div>
-
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 {{ $isXray ? 'opacity-100' : 'opacity-40' }}">
-                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isXray ? 'ring-[6px] ring-white/30' : '' }}">
-                            <i class="ri-shield-check-line text-3xl"></i>
-                        </div>
-                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Pemeriksaan<br>Bandara</span>
-                    </div>
-
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 {{ $isFlight ? 'opacity-100' : 'opacity-40' }}">
-                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isFlight ? 'ring-[6px] ring-white/30' : '' }}">
-                            <i class="ri-plane-line text-3xl"></i>
-                        </div>
-                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Proses<br>Penerbangan</span>
-                    </div>
-
-                    <div class="flex flex-col items-center gap-3 w-1/2 md:w-1/4 {{ $isDone ? 'opacity-100' : 'opacity-40' }}">
-                        <div class="w-16 h-16 bg-white text-[#1e3a8a] rounded-full flex items-center justify-center shadow-lg {{ $isDone ? 'ring-[6px] ring-white/30' : '' }}">
-                            <i class="ri-focus-3-line text-3xl"></i>
-                        </div>
-                        <span class="text-white text-sm font-medium font-['Poppins'] text-center leading-snug">Kargo<br>Diterima</span>
-                    </div>
-
+                    <h3 class="text-white text-xl font-semibold font-['Poppins'] mb-2">Menunggu Proses Operasional</h3>
+                    <p class="text-slate-200 text-sm md:text-base font-normal font-['Poppins'] max-w-lg">
+                        Data manifes kargo Anda telah terdaftar di sistem kami. Saat ini kargo sedang menunggu pembaruan status
+                        pertama dari petugas lapangan di hanggar keberangkatan.
+                    </p>
                 </div>
-            </div>
+            @endif
         </div>
     </section>
 
     <section class="w-full max-w-4xl mx-auto px-4 py-12 flex flex-col items-center gap-8">
 
         <div class="px-8 py-2 bg-[#1e3a8a] rounded-full shadow-md">
-            <span class="text-white text-base md:text-lg font-semibold font-['Poppins'] tracking-wide">Detail Pengiriman</span>
+            <span class="text-white text-base md:text-lg font-semibold font-['Poppins'] tracking-wide">Detail
+                Pengiriman</span>
         </div>
 
         {{-- Panel Ringkasan Manifes Data Kargo --}}
-        <div class="w-full max-w-2xl bg-slate-50 border border-slate-200 rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm font-['Poppins'] shadow-sm">
-            <div><span class="text-slate-500 text-xs block">Rute Pengiriman:</span> <span class="font-semibold text-slate-800">{{ $kargo->kotaAsal->nama_kota }} &rarr; {{ $kargo->kotaTujuan->nama_kota }}</span></div>
-            <div><span class="text-slate-500 text-xs block">Berat Barang:</span> <span class="font-semibold text-slate-800">{{ $kargo->berat }} kg</span></div>
-            <div><span class="text-slate-500 text-xs block">Deskripsi Isi:</span> <span class="font-semibold text-slate-800">{{ $kargo->isi_barang }}</span></div>
-            <div><span class="text-slate-500 text-xs block">Nama Penerima:</span> <span class="font-semibold text-slate-800">{{ $kargo->penerima->nama ?? '-' }}</span></div>
-            
+        <div
+            class="w-full max-w-2xl bg-slate-50 border border-slate-200 rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm font-['Poppins'] shadow-sm">
+            <div><span class="text-slate-500 text-xs block">Rute Pengiriman:</span> <span
+                    class="font-semibold text-slate-800">{{ $kargo->kotaAsal->nama_kota }} &rarr;
+                    {{ $kargo->kotaTujuan->nama_kota }}</span></div>
+            <div><span class="text-slate-500 text-xs block">Berat Barang:</span> <span
+                    class="font-semibold text-slate-800">{{ $kargo->berat }} kg</span></div>
+            <div><span class="text-slate-500 text-xs block">Deskripsi Isi:</span> <span
+                    class="font-semibold text-slate-800">{{ $kargo->isi_barang }}</span></div>
+
+            {{-- DATA PENGIRIM & PENERIMA --}}
+            <div><span class="text-slate-500 text-xs block">Nama Pengirim:</span> <span
+                    class="font-semibold text-slate-800">{{ $kargo->pengirim->nama ?? '-' }}</span></div>
+            <div><span class="text-slate-500 text-xs block">Telepon Pengirim:</span> <span
+                    class="font-semibold text-slate-800">{{ $kargo->pengirim->no_hp ?? '-' }}</span></div>
+            <div><span class="text-slate-500 text-xs block">Nama Penerima:</span> <span
+                    class="font-semibold text-slate-800">{{ $kargo->penerima->nama ?? '-' }}</span></div>
+
+            {{-- DATA MASKAPAI (Hanya muncul jika sudah ada nomor penerbangan) --}}
             @if($kargo->no_penerbangan)
-                <div><span class="text-slate-500 text-xs block">Nomor Armada:</span> <span class="font-semibold text-slate-800 uppercase">{{ $kargo->no_penerbangan }}</span></div>
-                <div>
-                    <span class="text-slate-500 text-xs block">Live Status Radar:</span> 
-                    <span class="font-semibold text-sky-700">
-                        {{ $detailPesawat->status_penerbangan ?? 'Active' }}
-                    </span>
+                <div class="col-span-2 sm:col-span-3 border-t border-slate-200 mt-2 pt-4 grid grid-cols-2 sm:grid-cols-3 gap-6">
+                    <div><span class="text-slate-500 text-xs block">Maskapai:</span> <span
+                            class="font-semibold text-slate-800">{{ $detailPesawat->maskapai ?? $kargo->maskapai ?? '-' }}</span>
+                    </div>
+                    <div><span class="text-slate-500 text-xs block">Nomor Armada:</span> <span
+                            class="font-semibold text-slate-800 uppercase">{{ $kargo->no_penerbangan }}</span></div>
+                    <div>
+                        <span class="text-slate-500 text-xs block">Live Status Radar:</span>
+                        <span class="font-semibold text-sky-700">
+                            {{ $detailPesawat->status_penerbangan ?? 'Active' }}
+                        </span>
+                    </div>
                 </div>
+
                 @if(isset($detailPesawat->eta))
-                    <div class="col-span-2 sm:col-span-3 bg-sky-50 border border-sky-100 rounded-lg p-3 text-sky-800 text-xs">
+                    <div class="col-span-2 sm:col-span-3 bg-sky-50 border border-sky-100 rounded-lg p-3 text-sky-800 text-xs mt-2">
                         <i class="ri-time-line"></i> <strong>Estimasi Tiba (ETA):</strong> {{ $detailPesawat->eta }}
                     </div>
                 @endif
@@ -133,7 +242,9 @@
                     </div>
 
                     <div class="relative flex flex-col items-center w-6 shrink-0">
-                        <div class="w-4 h-4 md:w-5 md:h-5 bg-white border-2 {{ strtolower($log->status) === 'offload' ? 'border-red-500 bg-red-50' : 'border-red' }} rounded-full z-10 mt-1 shadow-sm"></div>
+                        <div
+                            class="w-4 h-4 md:w-5 md:h-5 bg-white border-2 {{ strtolower($log->status) === 'offload' ? 'border-red-500 bg-red-50' : 'border-red' }} rounded-full z-10 mt-1 shadow-sm">
+                        </div>
 
                         @if(!$loop->last)
                             <div class="absolute top-6 bottom-[-16px] w-px border-l-2 border-dotted border-slate-400 z-0"></div>
@@ -141,7 +252,8 @@
                     </div>
 
                     <div class="flex-1 pt-0.5 pb-10">
-                        <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded border mb-1 uppercase {{ strtolower($log->status) === 'offload' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                        <span
+                            class="inline-block text-[10px] font-bold px-2 py-0.5 rounded border mb-1 uppercase {{ strtolower($log->status) === 'offload' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200' }}">
                             {{ $log->status }}
                         </span>
                         <p class="text-gray-700 text-sm md:text-base font-normal font-['Poppins'] leading-relaxed md:pr-10">
