@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\PenerbanganSeeder;
 use Illuminate\Database\Seeder;
+use Database\Seeders\KargoEntrySeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,7 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             MasterDataSeeder::class,
-            PenerbanganSeeder::class,
+            MasterPenerbanganSeeder::class,
             KargoEntrySeeder::class,
         ]);
     }
