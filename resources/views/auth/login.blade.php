@@ -44,11 +44,12 @@
                         </div>
 
                         <div class="flex flex-col gap-6">
+                            {{-- 1. SECURE ACCESS --}}
                             <div class="flex items-center gap-5">
                                 <div
                                     class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 shrink-0">
-                                    <img src="{{ asset('storage/images/icons/shield.svg') }}" alt="Shield icon"
-                                        class="w-7 h-7" />
+                                    {{-- Mengganti SVG eksternal dengan Remix Icon --}}
+                                    <i class="ri-shield-check-line text-3xl text-white"></i>
                                 </div>
                                 <div class="flex flex-col">
                                     <p class="text-white text-base font-medium font-primary">Secure Access</p>
@@ -57,11 +58,12 @@
                                 </div>
                             </div>
 
+                            {{-- 2. REAL-TIME MONITORING --}}
                             <div class="flex items-center gap-5">
                                 <div
                                     class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 shrink-0">
-                                    <img src="{{ asset('storage/images/icons/chart-line.svg') }}" alt="Chart line icon"
-                                        class="w-7 h-7" />
+                                    {{-- Mengganti SVG eksternal dengan Remix Icon --}}
+                                    <i class="ri-line-chart-line text-3xl text-white"></i>
                                 </div>
                                 <div class="flex flex-col">
                                     <p class="text-white text-base font-medium font-primary">Real-time Monitoring</p>
@@ -70,11 +72,12 @@
                                 </div>
                             </div>
 
+                            {{-- 3. COMPLETE CONTROL --}}
                             <div class="flex items-center gap-5">
                                 <div
                                     class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 shrink-0">
-                                    <img src="{{ asset('storage/images/icons/group.svg') }}" alt="Group icon"
-                                        class="w-7 h-7" />
+                                    {{-- Mengganti SVG eksternal dengan Remix Icon --}}
+                                    <i class="ri-team-line text-3xl text-white"></i>
                                 </div>
                                 <div class="flex flex-col">
                                     <p class="text-white text-base font-medium font-primary">Complete Control</p>
