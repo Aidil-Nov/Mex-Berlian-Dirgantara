@@ -16,9 +16,11 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-poppins text-gray-900 antialiased overflow-hidden">
+    <body class="font-primary text-surface-text antialiased bg-surface">
 
-        <div class="min-h-screen flex">
+        {{-- Menggunakan w-full dan overflow-x-hidden untuk mencegah bocor ke samping, tapi tetap bisa di-scroll
+        vertikal --}}
+        <div class="min-h-screen w-full flex overflow-x-hidden">
 
             <div class="hidden lg:flex flex-1 relative bg-slate-900 overflow-hidden">
                 <img src="{{ asset('storage/images/Bg-Login.png') }}" alt="MEX Logistics background"
