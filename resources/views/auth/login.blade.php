@@ -15,11 +15,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    {{-- [Checklist #1 & #3]: Ganti font-poppins ke font-primary, hapus overflow-hidden dari body --}}
-
     <body class="font-primary text-surface-text antialiased bg-surface">
 
-        {{-- [Checklist #1]: Pindahkan overflow ke container utama --}}
         <div class="min-h-screen w-full flex overflow-x-hidden">
 
             <div class="hidden lg:flex flex-1 relative bg-slate-900 overflow-hidden">
@@ -37,7 +34,6 @@
 
                     <div class="flex flex-col gap-10 max-w-lg">
                         <div class="flex flex-col gap-4">
-                            {{-- [Checklist #3]: Ganti semua font-['Poppins'] menjadi font-primary --}}
                             <h2 class="text-white text-3xl font-normal font-primary leading-tight">
                                 Welcome back,<br>
                                 <span class="text-3xl font-semibold">Admin/Manager</span>
@@ -95,12 +91,17 @@
                 </div>
             </div>
 
-            <div class="flex-1 bg-slate-50 flex justify-center items-center p-6 md:p-16 border-gray-800 border">
-                <div class="w-full max-w-xl bg-white shadow-2xl rounded-[32px] p-10 md:p-14 border border-slate-100">
+            {{-- [Checklist #4]: Hapus border-gray-800 yang aneh, gunakan bg-surface untuk background panel kanan --}}
+            <div class="flex-1 bg-surface flex justify-center items-center p-6 md:p-16">
+
+                {{-- [Checklist #4]: Ubah border-slate-100 menjadi border-surface-border --}}
+                <div
+                    class="w-full max-w-xl bg-white shadow-2xl rounded-[32px] p-10 md:p-14 border border-surface-border">
 
                     <div class="flex flex-col items-center gap-3 mb-10">
                         <h1 class="text-center text-red text-5xl font-semibold font-primary">Login</h1>
-                        <div class="w-full h-px bg-slate-200"></div>
+                        {{-- [Checklist #4]: Ganti garis pemisah menjadi bg-surface-border --}}
+                        <div class="w-full h-px bg-surface-border"></div>
                     </div>
 
                     <x-auth-session-status class="mb-6" :status="session('status')" />
@@ -109,50 +110,57 @@
                         @csrf
 
                         <div class="flex flex-col gap-2">
-                            <label for="email" class="text-black text-sm font-medium font-primary">ID Karyawan</label>
+                            {{-- [Checklist #4]: Ubah text-black ke text-surface-text --}}
+                            <label for="email" class="text-surface-text text-sm font-medium font-primary">ID
+                                Karyawan</label>
 
                             <div class="relative w-full flex items-center">
-                                <div class="absolute left-4 text-slate-400 flex items-center justify-center">
+                                <div class="absolute left-4 text-surface-muted flex items-center justify-center">
                                     <i class="ri-user-line text-xl"></i>
                                 </div>
+                                {{-- Ditambahkan efek focus:ring-blue agar form terlihat lebih interaktif --}}
                                 <input id="email"
-                                    class="w-full pl-12 pr-4 py-3.5 bg-slate-100 text-slate-800 text-base font-normal font-primary placeholder-slate-400 focus:outline-none focus:ring-0 border-none rounded-[16px] outline outline-1 outline-offset-[-1px] outline-slate-200"
+                                    class="w-full pl-12 pr-4 py-3.5 bg-surface text-surface-text text-base font-normal font-primary placeholder-surface-muted focus:outline-none focus:ring-1 focus:ring-blue focus:border-blue border-none rounded-[16px] outline outline-1 outline-offset-[-1px] outline-surface-border transition-all"
                                     type="text" name="email" placeholder="Masukan ID Karyawan Anda..."
                                     value="{{ old('email') }}" required autofocus autocomplete="username" />
                             </div>
 
-                            <x-input-error :messages="$errors->get('email')" class="mt-1.5" />
+                            {{-- [Checklist #5]: Penyesuaian layout Error Message agar rapi (tidak merusak grid) --}}
+                            <x-input-error :messages="$errors->get('email')"
+                                class="mt-1 text-sm font-medium text-red" />
                         </div>
 
-                        {{-- [Checklist #2]: Implementasi Alpine.js x-data pada pembungkus input password --}}
                         <div class="flex flex-col gap-2" x-data="{ showPassword: false }">
-                            <label for="password" class="text-black text-sm font-medium font-primary">Password</label>
+                            <label for="password"
+                                class="text-surface-text text-sm font-medium font-primary">Password</label>
 
                             <div class="relative w-full flex items-center">
                                 <div
-                                    class="absolute left-4 text-slate-400 flex items-center justify-center border-r border-slate-200 pr-3">
+                                    class="absolute left-4 text-surface-muted flex items-center justify-center border-r border-surface-border pr-3">
                                     <i class="ri-lock-line text-xl"></i>
                                 </div>
 
-                                {{-- Atribut type diikat dengan state Alpine (showPassword) --}}
                                 <input id="password"
-                                    class="w-full pl-16 pr-12 py-3.5 bg-slate-100 text-slate-800 text-base font-normal font-primary placeholder-slate-400 focus:outline-none focus:ring-0 border-none rounded-[16px] outline outline-1 outline-offset-[-1px] outline-slate-200"
+                                    class="w-full pl-16 pr-12 py-3.5 bg-surface text-surface-text text-base font-normal font-primary placeholder-surface-muted focus:outline-none focus:ring-1 focus:ring-blue focus:border-blue border-none rounded-[16px] outline outline-1 outline-offset-[-1px] outline-surface-border transition-all"
                                     :type="showPassword ? 'text' : 'password'" name="password"
                                     placeholder="Masukan Password Anda..." required autocomplete="current-password" />
 
-                                {{-- Icon div diberi event klik dan class dinamis berdasar state --}}
-                                <div class="absolute right-4 text-slate-400 cursor-pointer transition-colors hover:text-slate-600"
+                                <div class="absolute right-4 text-surface-muted cursor-pointer transition-colors hover:text-surface-text"
                                     @click="showPassword = !showPassword">
                                     <i class="text-xl" :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
                                 </div>
                             </div>
 
-                            <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
+                            {{-- [Checklist #5]: Penyesuaian layout Error Message untuk Password --}}
+                            <x-input-error :messages="$errors->get('password')"
+                                class="mt-1 text-sm font-medium text-red" />
                         </div>
 
-                        <div class="flex items-center justify-end mt-10">
+                        <div class="flex items-center justify-end mt-8">
+                            {{-- [Checklist #4]: Mengubah hover:bg-red-700 ke hover:bg-redhover, dan shadow-red-600/30
+                            ke shadow-red/30 --}}
                             <button type="submit"
-                                class="w-full bg-red hover:bg-red-700 text-white text-lg font-semibold font-primary py-4 rounded-[20px] shadow-lg shadow-red-600/30 transition-colors duration-200 focus:outline-none">
+                                class="w-full bg-red hover:bg-redhover text-white text-lg font-semibold font-primary py-4 rounded-[20px] shadow-lg shadow-red/30 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red">
                                 {{ __('Login') }}
                             </button>
                         </div>
