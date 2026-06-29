@@ -83,11 +83,21 @@
                 Monitor Operasional
             </a>
 
+            
+
             <a href="{{ route('manager.laporan') }}"
                 class="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-sm font-medium leading-5 transition-colors
                                     {{ request()->routeIs('manager.laporan') ? 'bg-emerald-50 text-emerald-700 shadow-sm' : 'text-slate-700 hover:bg-slate-50' }}">
                 <i class="ri-file-chart-line text-xl leading-none"></i>
                 Validasi & Laporan
+            </a>
+
+            {{-- MENU BARU: Navigasi Validasi Keluhan untuk Manajer --}}
+            <a href="{{ route('manager.validasi-komplain') }}"
+                class="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-sm font-medium leading-5 transition-colors
+                                    {{ request()->routeIs('manager.validasi-komplain') ? 'bg-emerald-50 text-emerald-700 shadow-sm' : 'text-slate-700 hover:bg-slate-50' }}">
+                <i class="ri-customer-service-2-line text-xl leading-none"></i>
+                Validasi Keluhan
             </a>
         </nav>
 
