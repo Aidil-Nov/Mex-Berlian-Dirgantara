@@ -9,7 +9,9 @@ use Carbon\Carbon;
 
 class TrackingController extends Controller
 {
-    // METHOD UNTUK INTERNAL ADMIN (SUDAH ADA)
+    // =====================================================================
+    // METHOD 1: UNTUK INTERNAL ADMIN
+    // =====================================================================
     public function index(Request $request)
     {
         $kargo = null;
@@ -28,34 +30,9 @@ class TrackingController extends Controller
                 }
             ])->where('no_resi', $resi)->first();
 
-            if ($kargo && $kargo->no_penerbangan) {
-                try {
-                    $apiKey = 'd595ef7c4649c7577520bd16203542ce';
-                    $response = Http::timeout(5)->get("http://api.aviationstack.com/v1/flights", [
-                        'access_key' => $apiKey,
-                        'flight_iata' => $kargo->no_penerbangan
-                    ]);
-
-                    if ($response->successful() && !empty($response->json()['data'])) {
-                        $apiData = $response->json()['data'][0];
-                        $waktuMentah = $apiData['arrival']['estimated'] ?? $apiData['arrival']['scheduled'] ?? null;
-
-                        $etaFormatted = 'Menunggu update radar';
-                        if ($waktuMentah) {
-                            $etaFormatted = Carbon::parse($waktuMentah)->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB';
-                        }
-
-                        $detailPesawat = (object) [
-                            'maskapai' => $apiData['airline']['name'] ?? $kargo->maskapai,
-                            'jenis_pesawat' => $apiData['aircraft']['production_line'] ?? 'Informasi Tidak Tersedia',
-                            'status_penerbangan' => ucfirst($apiData['flight_status'] ?? 'Scheduled'),
-                            'eta' => $etaFormatted,
-                            'sumber' => 'Live Radar API'
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    // Silently ignore network error
-                }
+            // Panggil Helper Method API
+            if ($kargo) {
+                $detailPesawat = $this->getFlightDetails($kargo->no_penerbangan, $kargo->maskapai);
             }
         }
 
@@ -63,86 +40,95 @@ class TrackingController extends Controller
     }
 
     // =====================================================================
-    // METHOD BARU: UNTUK PUBLIC CUSTOMER / GUEST (TAMBAHKAN KODE DI BAWAH INI)
-    // =====================================================================
-    // =====================================================================
-    // METHOD: UNTUK PUBLIC CUSTOMER / GUEST (DENGAN VERIFIKASI KEAMANAN)
-    // =====================================================================
-    // =====================================================================
-    // METHOD: UNTUK PUBLIC CUSTOMER / GUEST (DENGAN VERIFIKASI KEAMANAN)
+    // METHOD 2: UNTUK PUBLIC CUSTOMER / GUEST (DENGAN VERIFIKASI KEAMANAN)
     // =====================================================================
     public function publicTracking(Request $request)
     {
-        $no_resi = strtoupper($request->query('no_resi'));
-        $digit = $request->query('digit'); // Menangkap 4 angka terakhir dari pop-up
+        // 1. Proteksi Type-Casting (Cegah Array Injection pada URL)
+        $no_resi = strtoupper((string) $request->query('no_resi'));
+        $digit = (string) $request->query('digit');
 
-        if (!$no_resi) {
+        if (empty($no_resi)) {
             return redirect()->route('home');
         }
 
-        // Validasi jika 4 digit verifikasi kosong
-        if (!$digit || strlen($digit) !== 4) {
-            return redirect()->route('home')->with('error', 'Verifikasi Gagal! 4 digit nomor telepon wajib diisi.');
+        // 2. Validasi Ketat 4 Digit Angka (Hanya boleh berisi nomor)
+        if (empty($digit) || strlen($digit) !== 4 || !ctype_digit($digit)) {
+            return redirect()->route('home')->with('error', 'Verifikasi Gagal! Masukkan format 4 digit angka yang valid.');
         }
 
-        // Ambil data kargo beserta pengirim & penerima untuk verifikasi nomor HP
+        // 3. Ambil data kargo beserta relasi
         $kargo = Kargo::with([
             'kotaAsal',
             'kotaTujuan',
-            'pengirim', // Muat data pengirim
-            'penerima', // Muat data penerima
+            'pengirim',
+            'penerima',
             'history' => function ($query) {
-                $query->orderBy('waktu_update', 'desc');
+                $query->orderBy('waktu_update', 'desc'); // Urutkan dari yang terbaru
             }
         ])->where('no_resi', $no_resi)->first();
 
-        // Jika resi tidak ditemukan
         if (!$kargo) {
             return redirect()->route('home')->with('error', 'Nomor resi tidak ditemukan. Silakan periksa kembali kode resi Anda.');
         }
 
-        // BERSIHKAN & AMBIL 4 ANGKA TERAKHIR NO HP (Pencegahan jika di DB ada spasi/strip)
-        $hpPengirim = preg_replace('/[^0-9]/', '', $kargo->pengirim->no_hp ?? '');
-        $hpPenerima = preg_replace('/[^0-9]/', '', $kargo->penerima->no_hp ?? '');
+        // 4. Sanitasi Ekstra & Pencocokan Nomor HP
+        // Memastikan tidak ada karakter selain angka (menghapus spasi, +62, atau strip)
+        $hpPengirim = preg_replace('/[^0-9]/', '', (string) ($kargo->pengirim->no_hp ?? ''));
+        $hpPenerima = preg_replace('/[^0-9]/', '', (string) ($kargo->penerima->no_hp ?? ''));
 
         $last4Pengirim = substr($hpPengirim, -4);
         $last4Penerima = substr($hpPenerima, -4);
 
-        // COCOKKAN: Harus sama dengan salah satu (Pengirim atau Penerima)
         if ($digit !== $last4Pengirim && $digit !== $last4Penerima) {
-            return redirect()->route('home')->with('error', 'Verifikasi Gagal! 4 angka terakhir nomor telepon salah atau tidak sesuai.');
+            return redirect()->route('home')->with('error', 'Verifikasi Gagal! 4 angka terakhir nomor telepon salah atau tidak sesuai dengan manifes kargo.');
         }
 
-        // JIKA LOLOS VERIFIKASI -> Ambil Live Radar API (Jika ada nomor penerbangan)
-        $detailPesawat = null;
-        if ($kargo->no_penerbangan) {
-            try {
-                $apiKey = 'd595ef7c4649c7577520bd16203542ce';
-                $response = Http::timeout(5)->get("http://api.aviationstack.com/v1/flights", [
-                    'access_key' => $apiKey,
-                    'flight_iata' => $kargo->no_penerbangan
-                ]);
-
-                if ($response->successful() && !empty($response->json()['data'])) {
-                    $apiData = $response->json()['data'][0];
-                    $waktuMentah = $apiData['arrival']['estimated'] ?? $apiData['arrival']['scheduled'] ?? null;
-
-                    $etaFormatted = 'Menunggu update radar';
-                    if ($waktuMentah) {
-                        $etaFormatted = Carbon::parse($waktuMentah)->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB';
-                    }
-
-                    $detailPesawat = (object) [
-                        'maskapai' => $apiData['airline']['name'] ?? $kargo->maskapai,
-                        'status_penerbangan' => ucfirst($apiData['flight_status'] ?? 'Scheduled'),
-                        'eta' => $etaFormatted
-                    ];
-                }
-            } catch (\Exception $e) {
-                // Tetap aman jika API timeout
-            }
-        }
+        // 5. Jika Lolos Validasi -> Panggil Helper Method API
+        $detailPesawat = $this->getFlightDetails($kargo->no_penerbangan, $kargo->maskapai);
 
         return view('customer.partials.tracking-result', compact('kargo', 'detailPesawat', 'no_resi'));
+    }
+
+    // =====================================================================
+    // METHOD 3: HELPER FUNCTION (DRY - Don't Repeat Yourself)
+    // =====================================================================
+    private function getFlightDetails($no_penerbangan, $maskapai_default)
+    {
+        if (empty($no_penerbangan)) {
+            return null;
+        }
+
+        try {
+            // Ambil API Key dari .env (Fallback ke key default jika tidak ada)
+            $apiKey = env('AVIATION_API_KEY', 'd595ef7c4649c7577520bd16203542ce');
+
+            $response = Http::timeout(5)->get("http://api.aviationstack.com/v1/flights", [
+                'access_key' => $apiKey,
+                'flight_iata' => $no_penerbangan
+            ]);
+
+            if ($response->successful() && !empty($response->json()['data'])) {
+                $apiData = $response->json()['data'][0];
+                $waktuMentah = $apiData['arrival']['estimated'] ?? $apiData['arrival']['scheduled'] ?? null;
+
+                $etaFormatted = 'Menunggu update radar';
+                if ($waktuMentah) {
+                    $etaFormatted = Carbon::parse($waktuMentah)->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB';
+                }
+
+                return (object) [
+                    'maskapai' => $apiData['airline']['name'] ?? $maskapai_default,
+                    'jenis_pesawat' => $apiData['aircraft']['production_line'] ?? 'Informasi Tidak Tersedia',
+                    'status_penerbangan' => ucfirst($apiData['flight_status'] ?? 'Scheduled'),
+                    'eta' => $etaFormatted,
+                    'sumber' => 'Live Radar API'
+                ];
+            }
+        } catch (\Exception $e) {
+            // Abaikan secara diam-diam jika jaringan bermasalah/API Timeout
+        }
+
+        return null;
     }
 }
