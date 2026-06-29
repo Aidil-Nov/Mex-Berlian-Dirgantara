@@ -4,6 +4,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KargoController;
 use App\Http\Controllers\KomplainController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\ManagerDashboardController;
+use App\Http\Controllers\ManagerKomplainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StatusPengirimanController;
 use App\Http\Controllers\TrackingController;
@@ -50,55 +52,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // -----------------------------------------------------
     // GRUP ROUTE MANAJER CABANG
     // -----------------------------------------------------
-    Route::prefix('manager')->name('manager.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('manager.dashboard');
-        })->name('dashboard');
+    Route::middleware(['auth', 'checkRole:manajer_cabang'])->prefix('manager')->group(function () {
+        
+        // Ruang Lingkup 2: Dashboard Ringkasan
+        Route::get('/dashboard', [ManagerDashboardController::class, 'index'])->name('manager.dashboard');
+        
+        // Ruang Lingkup 3: Modul Monitor Operasional
+        Route::get('/monitoring', [ManagerKomplainController::class, 'index'])->name('manager.monitoring');
+        Route::post('/komplain/{id}/solusi', [ManagerKomplainController::class, 'updateSolusi'])->name('manager.komplain.solusi');
 
-        Route::get('/monitoring', function () {
-            return view('manager.monitoring');
-        })->name('monitoring');
+        // PERBAIKAN: Diarahkan ke 'validasiIndex' agar tampilan halaman ini BERBEDA dengan Monitor Operasional
+        Route::get('/validasi-komplain', [ManagerKomplainController::class, 'validasiIndex'])->name('manager.validasi-komplain');
 
-        Route::get('/laporan', function () {
-            return view('manager.laporan');
-        })->name('laporan');
+        // Modul Manajemen Berkas Dokumen Laporan Operasional
+        Route::get('/laporan', [LaporanController::class, 'index'])->name('manager.laporan');
+        Route::post('/laporan/generate', [LaporanController::class, 'generate'])->name('manager.laporan.generate');
+        Route::get('/laporan/download/{id}', [LaporanController::class, 'download'])->name('manager.laporan.download');
+
     });
-
+    
     // -----------------------------------------------------
     // GRUP ROUTE ADMIN OPERASIONAL
     // -----------------------------------------------------
     Route::prefix('admin')->name('admin.')->group(function () {
-
-        // GANTI CLOSURE DENGAN CONTROLLER
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-        // Route::get('/kelola-data-kargo', function () {
-        //     return view('admin.kelola-data-kargo');
-        // })->name('kelola-data-kargo');
-
-        // Route::get('/kelola-status-pengiriman', function () {
-        //     return view('admin.kelola-status-pengiriman');
-        // })->name('kelola-status-pengiriman');
-
-        // Route::get('/kelola-data-kargo', function () {
-        //     return view('admin.kelola-data-kargo');
-        // })->name('kelola-data-kargo'); 
-
-        // Route::get('/kelola-status-pengiriman', function () {
-        //     return view('admin.kelola-status-pengiriman');
-        // })->name('kelola-status-pengiriman');
-
-        // Route::get('/tracking-pengiriman', function () {
-        //     return view('admin.tracking-pengiriman');
-        // })->name('tracking-pengiriman');
-
-        // Route::get('/laporan', function () {
-        //     return view('admin.kelola-laporan');
-        // })->name('kelola-laporan');
-
-        // Route::get('/komplain', function () {
-        //     return view('admin.komplain');
-        // })->name('komplain');
     });
 
     // Pengaturan Profil Bawaan Breeze
@@ -106,22 +83,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Modul Kargo
     Route::get('/admin/kelola-data-kargo', [KargoController::class, 'create'])->name('admin.kelola-data-kargo');
     Route::post('/admin/kelola-data-kargo', [KargoController::class, 'store'])->name('admin.kelola-data-kargo.store');
 
+    // Modul Status Pengiriman
     Route::get('/kelola-status-pengiriman', [StatusPengirimanController::class, 'index'])->name('admin.kelola-status-pengiriman');
     Route::post('/kelola-status-pengiriman/update', [StatusPengirimanController::class, 'update'])->name('admin.kelola-status-pengiriman.update');
 
+    // Modul Tracking
     Route::get('/tracking-pengiriman', [TrackingController::class, 'index'])->name('admin.tracking-pengiriman');
 
+    // Modul Cetak Laporan (Sisi Admin)
     Route::get('/laporan', [LaporanController::class, 'index'])->name('admin.kelola-laporan');
     Route::post('/laporan/generate', [LaporanController::class, 'generate'])->name('admin.kelola-laporan.generate');
     Route::get('/laporan/download/{id}', [LaporanController::class, 'download'])->name('admin.kelola-laporan.download');
 
-    Route::get('/komplain', [App\Http\Controllers\KomplainController::class, 'index'])->name('admin.komplain');
-    Route::get('/komplain/cek-resi', [App\Http\Controllers\KomplainController::class, 'cekResi'])->name('admin.komplain.cek-resi');
-    Route::post('/komplain', [App\Http\Controllers\KomplainController::class, 'store'])->name('admin.komplain.store');
-
+    // Modul Input Komplain (Sisi Admin)
+    Route::get('/komplain', [KomplainController::class, 'index'])->name('admin.komplain');
+    Route::get('/komplain/cek-resi', [KomplainController::class, 'cekResi'])->name('admin.komplain.cek-resi');
+    Route::post('/komplain', [KomplainController::class, 'store'])->name('admin.komplain.store');
 
 });
 
