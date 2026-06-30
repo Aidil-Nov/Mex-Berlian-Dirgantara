@@ -91,7 +91,7 @@ class TrackingController extends Controller
     }
 
     // =====================================================================
-    // METHOD 3: HELPER FUNCTION DENGAN IMPLEMENTASI CACHE LAYER (HEMAT TOKEN)
+    // METHOD 3: HELPER FUNCTION DENGAN IMPLEMENTASI CACHE LAYER (ARRAY SAFE)
     // =====================================================================
     private function getFlightDetails($no_penerbangan, $maskapai_default)
     {
@@ -99,13 +99,12 @@ class TrackingController extends Controller
             return null;
         }
 
-        // Membuat key cache unik berbasis nomor pesawat (contoh: flight_radar_GA501)
         $cacheKey = 'flight_radar_' . strtoupper(str_replace(' ', '', $no_penerbangan));
 
-        // STRATEGI DEFENSIVE CACHING: Jika data radar pesawat sudah ada di memori cache,
-        // langsung kembalikan datanya tanpa melakukan koneksi HTTP ke luar (0 Token API!)
+        // JIKA ADA DI CACHE: Ambil data array, lalu cast menjadi (object) secara on-the-fly
         if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
+            $cachedData = Cache::get($cacheKey);
+            return is_array($cachedData) ? (object) $cachedData : null;
         }
 
         try {
@@ -125,7 +124,8 @@ class TrackingController extends Controller
                     $etaFormatted = Carbon::parse($waktuMentah)->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB';
                 }
 
-                $flightInfo = (object) [
+                // PERBAIKAN: Definisikan sebagai ARRAY MURNI (bukan object) agar aman di-serialize oleh cache driver
+                $flightInfoArray = [
                     'maskapai' => $apiData['airline']['name'] ?? $maskapai_default,
                     'jenis_pesawat' => $apiData['aircraft']['production_line'] ?? 'Informasi Tidak Tersedia',
                     'status_penerbangan' => ucfirst($apiData['flight_status'] ?? 'Scheduled'),
@@ -133,10 +133,11 @@ class TrackingController extends Controller
                     'sumber' => 'Live Radar API (Cached)'
                 ];
 
-                // Kunci data penerbangan ini di dalam Cache selama 30 menit
-                Cache::put($cacheKey, $flightInfo, now()->addMinutes(30));
+                // Simpan struktur Array murni ke dalam cache selama 30 menit
+                Cache::put($cacheKey, $flightInfoArray, now()->addMinutes(30));
 
-                return $flightInfo;
+                // Kembalikan dalam bentuk object agar tidak merusak kode file Blade views Anda
+                return (object) $flightInfoArray;
             }
         } catch (\Exception $e) {
             // Abaikan secara diam-diam jika jaringan bermasalah/API Timeout
