@@ -16,20 +16,22 @@ class LaporanController extends Controller
 {
     public function index()
     {
-        // Mengambil riwayat cetak laporan terbaru
-        $riwayat = Laporan::with('user')->latest()->get();
+        // Mengambil riwayat cetak laporan
+        $riwayat = Laporan::with(['user', 'validator'])->latest()->get();
         
-        // Pengecekan Hak Akses untuk Tampilan Blade
+        // Memisahkan laporan berdasarkan status untuk memudahkan tampilan di View
+        $pending = $riwayat->where('status', 'pending');
+        $validated = $riwayat->where('status', 'validated');
+
         if (Auth::user()->role === 'manajer_cabang') {
-            return view('manager.laporan', compact('riwayat'));
+            return view('manager.laporan', compact('pending', 'validated'));
         }
 
-        return view('admin.kelola-laporan', compact('riwayat'));
+        return view('admin.kelola-laporan', compact('pending', 'validated'));
     }
 
     public function generate(Request $request)
     {
-        // Validasi input tanggal agar tidak kosong saat di-generate
         $request->validate([
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
@@ -40,11 +42,7 @@ class LaporanController extends Controller
             ->whereBetween('created_at', [$request->tgl_mulai . ' 00:00:00', $request->tgl_selesai . ' 23:59:59']);
 
         if ($request->status_filter !== 'semua') {
-            $statusMap = [
-                'diproses' => ['Entry', 'X-Ray', 'Loading', 'On Flight', 'Landing'], 
-                'offload' => ['Offload'], 
-                'selesai' => ['Selesai', 'Di Terima']
-            ];
+            $statusMap = ['diproses' => ['Entry', 'X-Ray', 'Loading', 'On Flight', 'Landing'], 'offload' => ['Offload'], 'selesai' => ['Selesai', 'Di Terima']];
             $query->whereIn('status_terakhir', $statusMap[$request->status_filter]);
         }
         $data = $query->get();
@@ -56,43 +54,54 @@ class LaporanController extends Controller
             Excel::store(new KargoExport($data), $path, 'public');
         } else {
             $path = 'laporan/' . $idLaporan . '.pdf';
-
-            // Menggunakan view laporan yang sudah ada
             $pdf = Pdf::loadView('admin.laporan-pdf', [
                 'data' => $data,
                 'jenis_laporan' => ucfirst($request->jenis_laporan),
                 'periode' => \Carbon\Carbon::parse($request->tgl_mulai)->format('d/m/Y') . ' s/d ' . \Carbon\Carbon::parse($request->tgl_selesai)->format('d/m/Y')
             ]);
-
             Storage::disk('public')->put($path, $pdf->output());
         }
 
-        // Menyimpan data log laporan ke database
+        // Menyimpan dengan status 'pending' (Wajib divalidasi manajer dulu)
         Laporan::create([
             'id_laporan' => $idLaporan, 
             'jenis_laporan' => $request->jenis_laporan, 
             'periode_label' => \Carbon\Carbon::parse($request->tgl_mulai)->format('d/m/Y') . ' s/d ' . \Carbon\Carbon::parse($request->tgl_selesai)->format('d/m/Y'), 
             'file_path' => $path, 
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
+            'status' => 'pending' 
         ]);
 
-        // Pengecekan Hak Akses untuk Arah Redirection setelah sukses
-        if (Auth::user()->role === 'manajer_cabang') {
-            return redirect()->route('manager.laporan')->with('success', 'Laporan Manajer berhasil dibuat!');
-        }
+        return redirect()->back()->with('success', 'Laporan berhasil dibuat. Menunggu validasi Manajer.');
+    }
 
-        return redirect()->route('admin.kelola-laporan')->with('success', 'Laporan Admin berhasil dibuat!');
+    // METHOD BARU: Untuk Manajer Memvalidasi Laporan
+    public function validateReport($id)
+    {
+        $laporan = Laporan::findOrFail($id);
+        
+        $laporan->update([
+            'status' => 'validated',
+            'validator_id' => Auth::id(),
+            'validated_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Laporan berhasil divalidasi dan kini siap diunduh.');
     }
 
     public function download($id)
     {
         $lap = Laporan::findOrFail($id);
         
-        // Memastikan file fisik benar-benar ada di storage sebelum diunduh
+        // PENGAMANAN: Hanya bisa download jika sudah 'validated'
+        if ($lap->status !== 'validated') {
+            return back()->with('error', 'Akses ditolak. Laporan belum divalidasi oleh Manajer.');
+        }
+        
         if (Storage::disk('public')->exists($lap->file_path)) {
             return Storage::disk('public')->download($lap->file_path);
         }
 
-        return back()->with('error', 'Gagal mengunduh file. Berkas fisik tidak ditemukan di sistem penyimpanan.');
+        return back()->with('error', 'Berkas fisik tidak ditemukan.');
     }
 }
