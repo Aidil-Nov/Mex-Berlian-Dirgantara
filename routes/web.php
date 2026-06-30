@@ -6,12 +6,14 @@ use App\Http\Controllers\KomplainController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\ManagerKomplainController;
+use App\Http\Controllers\ManagerMonitoringController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StatusPengirimanController;
 use App\Http\Controllers\TrackingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -53,12 +55,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // GRUP ROUTE MANAJER CABANG
     // -----------------------------------------------------
     Route::middleware(['auth', 'checkRole:manajer_cabang'])->prefix('manager')->group(function () {
-        
+
         // Ruang Lingkup 2: Dashboard Ringkasan
         Route::get('/dashboard', [ManagerDashboardController::class, 'index'])->name('manager.dashboard');
-        
+
         // Ruang Lingkup 3: Modul Monitor Operasional
-        Route::get('/monitoring', [ManagerKomplainController::class, 'index'])->name('manager.monitoring');
+        // Jangan lupa tambahkan use App\Http\Controllers\ManagerMonitoringController; di bagian atas web.php ya!
+        Route::get('/monitoring', [ManagerMonitoringController::class, 'index'])->name('manager.monitoring');
         Route::post('/komplain/{id}/solusi', [ManagerKomplainController::class, 'updateSolusi'])->name('manager.komplain.solusi');
 
         // PERBAIKAN: Diarahkan ke 'validasiIndex' agar tampilan halaman ini BERBEDA dengan Monitor Operasional
@@ -68,9 +71,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/laporan', [LaporanController::class, 'index'])->name('manager.laporan');
         Route::post('/laporan/generate', [LaporanController::class, 'generate'])->name('manager.laporan.generate');
         Route::get('/laporan/download/{id}', [LaporanController::class, 'download'])->name('manager.laporan.download');
-
+        // Tambahkan route ini di dalam grup route manajer
+        Route::post('/laporan/{id}/validate', [LaporanController::class, 'validateReport'])->name('manager.laporan.validate');
     });
-    
+
     // -----------------------------------------------------
     // GRUP ROUTE ADMIN OPERASIONAL
     // -----------------------------------------------------
