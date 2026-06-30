@@ -11,18 +11,26 @@ class Laporan extends Model
 
     protected $table = 'laporan';
 
-    // Izinkan kolom-kolom ini diisi secara massal
     protected $fillable = [
         'id_laporan',
         'jenis_laporan',
         'periode_label',
         'file_path',
-        'user_id'
+        'user_id',
+        'status',         // Baru
+        'validator_id',   // Baru
+        'validated_at'    // Baru
     ];
 
     // Relasi ke user pembuat laporan
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relasi ke user yang memvalidasi (Manajer)
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validator_id');
     }
 }
