@@ -37,7 +37,7 @@ class StatusPengirimanController extends Controller
             $penerbanganAktif = Cache::get($cacheKey);
         } else {
             // JIKA KOSONG: Baru panggil API Aviationstack (Maksimal 1 kali request per 2 jam)
-            $apiKey = env('AVIATION_API_KEY', 'd595ef7c4649c7577520bd16203542ce');
+            $apiKey = env('AVIATION_API_KEY', '8ad7060a729baa7d9490f20b613b5d42');
 
             // Mapping Kode IATA Otomatis dari Database Master Kota
             $semuaKota = MasterKota::all();

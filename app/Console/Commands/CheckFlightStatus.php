@@ -29,12 +29,12 @@ class CheckFlightStatus extends Command
             return;
         }
 
-        $apiKey = env('AVIATION_API_KEY', 'd595ef7c4649c7577520bd16203542ce');
+        $apiKey = env('AVIATION_API_KEY', '8ad7060a729baa7d9490f20b613b5d42');
         $tanggalHariIni = Carbon::today()->format('Y-m-d');
 
         // Looping dilakukan per NOMOR PENERBANGAN (Pesawat), BUKAN per kargo (Sangat Hemat Token!)
         foreach ($kargoGrouped as $noPenerbangan => $daftarKargo) {
-            
+
             $this->info("Menghubungi Radar API untuk mengecek nomor penerbangan: {$noPenerbangan}...");
 
             try {
@@ -54,7 +54,7 @@ class CheckFlightStatus extends Command
 
                     if ($flightToday) {
                         $apiStatus = strtolower($flightToday['flight_status']);
-                        
+
                         // 3. Looping semua kargo yang menumpang di pesawat ini untuk disesuaikan statusnya
                         foreach ($daftarKargo as $kargo) {
                             $statusBaru = null;
