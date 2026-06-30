@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Kargo;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache; // Wajib di-import untuk mengaktifkan fitur Cache
 use Carbon\Carbon;
 
 class TrackingController extends Controller
 {
     // =====================================================================
-    // METHOD 1: UNTUK INTERNAL ADMIN
+    // METHOD 1: UNTUK INTERNAL ADMIN (Tetap Menggunakan Fungsi Helper)
     // =====================================================================
     public function index(Request $request)
     {
@@ -30,7 +31,7 @@ class TrackingController extends Controller
                 }
             ])->where('no_resi', $resi)->first();
 
-            // Panggil Helper Method API
+            // Panggil Helper Method API (Sudah terlindungi Cache)
             if ($kargo) {
                 $detailPesawat = $this->getFlightDetails($kargo->no_penerbangan, $kargo->maskapai);
             }
@@ -73,7 +74,6 @@ class TrackingController extends Controller
         }
 
         // 4. Sanitasi Ekstra & Pencocokan Nomor HP
-        // Memastikan tidak ada karakter selain angka (menghapus spasi, +62, atau strip)
         $hpPengirim = preg_replace('/[^0-9]/', '', (string) ($kargo->pengirim->no_hp ?? ''));
         $hpPenerima = preg_replace('/[^0-9]/', '', (string) ($kargo->penerima->no_hp ?? ''));
 
@@ -84,14 +84,14 @@ class TrackingController extends Controller
             return redirect()->route('home')->with('error', 'Verifikasi Gagal! 4 angka terakhir nomor telepon salah atau tidak sesuai dengan manifes kargo.');
         }
 
-        // 5. Jika Lolos Validasi -> Panggil Helper Method API
+        // 5. Jika Lolos Validasi -> Panggil Helper Method API (Sudah terlindungi Cache)
         $detailPesawat = $this->getFlightDetails($kargo->no_penerbangan, $kargo->maskapai);
 
         return view('customer.partials.tracking-result', compact('kargo', 'detailPesawat', 'no_resi'));
     }
 
     // =====================================================================
-    // METHOD 3: HELPER FUNCTION (DRY - Don't Repeat Yourself)
+    // METHOD 3: HELPER FUNCTION DENGAN IMPLEMENTASI CACHE LAYER (HEMAT TOKEN)
     // =====================================================================
     private function getFlightDetails($no_penerbangan, $maskapai_default)
     {
@@ -99,8 +99,16 @@ class TrackingController extends Controller
             return null;
         }
 
+        // Membuat key cache unik berbasis nomor pesawat (contoh: flight_radar_GA501)
+        $cacheKey = 'flight_radar_' . strtoupper(str_replace(' ', '', $no_penerbangan));
+
+        // STRATEGI DEFENSIVE CACHING: Jika data radar pesawat sudah ada di memori cache,
+        // langsung kembalikan datanya tanpa melakukan koneksi HTTP ke luar (0 Token API!)
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
         try {
-            // Ambil API Key dari .env (Fallback ke key default jika tidak ada)
             $apiKey = env('AVIATION_API_KEY', 'd595ef7c4649c7577520bd16203542ce');
 
             $response = Http::timeout(5)->get("http://api.aviationstack.com/v1/flights", [
@@ -117,13 +125,18 @@ class TrackingController extends Controller
                     $etaFormatted = Carbon::parse($waktuMentah)->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB';
                 }
 
-                return (object) [
+                $flightInfo = (object) [
                     'maskapai' => $apiData['airline']['name'] ?? $maskapai_default,
                     'jenis_pesawat' => $apiData['aircraft']['production_line'] ?? 'Informasi Tidak Tersedia',
                     'status_penerbangan' => ucfirst($apiData['flight_status'] ?? 'Scheduled'),
                     'eta' => $etaFormatted,
-                    'sumber' => 'Live Radar API'
+                    'sumber' => 'Live Radar API (Cached)'
                 ];
+
+                // Kunci data penerbangan ini di dalam Cache selama 30 menit
+                Cache::put($cacheKey, $flightInfo, now()->addMinutes(30));
+
+                return $flightInfo;
             }
         } catch (\Exception $e) {
             // Abaikan secara diam-diam jika jaringan bermasalah/API Timeout
