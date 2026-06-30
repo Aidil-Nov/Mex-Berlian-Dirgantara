@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Kargo;
 use App\Models\HistoryStatus;
-use App\Models\MasterPenerbangan; // Masukkan Model Baru di Sini
+use App\Models\MasterPenerbangan;
 use App\Models\MasterKota;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache; // Wajib di-import untuk manajemen memori cache dropdown
 
 class StatusPengirimanController extends Controller
 {
@@ -28,66 +29,83 @@ class StatusPengirimanController extends Controller
         $tertunda = $kargo->where('status_terakhir', 'Offload');
         $selesai = $kargo->whereIn('status_terakhir', ['Selesai', 'Di Terima']);
 
-        // FULL API: AMBIL JADWAL PENERBANGAN REAL-TIME DARI RADAR
-        $apiKey = 'd595ef7c4649c7577520bd16203542ce';
         $penerbanganAktif = [];
+        $cacheKey = 'flights_dropdown_scheduled_pnk';
 
-        // Mapping Kode IATA Otomatis dari Database Master Kota
-        $semuaKota = MasterKota::all();
-        $iataMap = [];
-        foreach ($semuaKota as $kota) {
-            if (preg_match('/\((.*?)\)/', $kota->nama_kota, $match)) {
-                $iataMap[strtoupper($match[1])] = $kota->id;
-            }
-        }
+        // STRATEGI CACHING: Cek apakah data list jadwal pesawat bandara asal sudah ada di cache
+        if (Cache::has($cacheKey)) {
+            $penerbanganAktif = Cache::get($cacheKey);
+        } else {
+            // JIKA KOSONG: Baru panggil API Aviationstack (Maksimal 1 kali request per 2 jam)
+            $apiKey = env('AVIATION_API_KEY', 'd595ef7c4649c7577520bd16203542ce');
 
-        try {
-            $response = Http::timeout(5)->get("http://api.aviationstack.com/v1/flights", [
-                'access_key' => $apiKey,
-                'dep_iata' => 'PNK', // Bandara Asal Selalu Pontianak
-                'flight_status' => 'scheduled'
-            ]);
-
-            if ($response->successful()) {
-                $apiData = $response->json()['data'] ?? [];
-
-                foreach ($apiData as $flight) {
-                    $arrIata = strtoupper($flight['arrival']['iata'] ?? '');
-                    $idTujuan = $iataMap[$arrIata] ?? null;
-
-                    if ($idTujuan && $flight['flight']['iata'] && $flight['airline']['name']) {
-                        $penerbanganAktif[] = [
-                            'id_kota_asal' => $iataMap['PNK'] ?? 1,
-                            'id_kota_tujuan' => $idTujuan,
-                            'no_penerbangan' => $flight['flight']['iata'],
-                            'maskapai' => $flight['airline']['name']
-                        ];
-                    }
+            // Mapping Kode IATA Otomatis dari Database Master Kota
+            $semuaKota = MasterKota::all();
+            $iataMap = [];
+            foreach ($semuaKota as $kota) {
+                if (preg_match('/\((.*?)\)/', $kota->nama_kota, $match)) {
+                    $iataMap[strtoupper($match[1])] = $kota->id;
                 }
             }
-        } catch (\Exception $e) {
-            // Abaikan error jaringan API agar proses di bawah tetap berjalan
+
+            try {
+                $response = Http::timeout(5)->get("http://api.aviationstack.com/v1/flights", [
+                    'access_key' => $apiKey,
+                    'dep_iata' => 'PNK', // Bandara Keberangkatan Utama: Supadio Pontianak
+                    'flight_status' => 'scheduled'
+                ]);
+
+                if ($response->successful()) {
+                    $apiData = $response->json()['data'] ?? [];
+                    $tempFlights = [];
+
+                    foreach ($apiData as $flight) {
+                        $arrIata = strtoupper($flight['arrival']['iata'] ?? '');
+                        $idTujuan = $iataMap[$arrIata] ?? null;
+
+                        if ($idTujuan && $flight['flight']['iata'] && $flight['airline']['name']) {
+                            $tempFlights[] = [
+                                'id_kota_asal' => $iataMap['PNK'] ?? 1,
+                                'id_kota_tujuan' => $idTujuan,
+                                'no_penerbangan' => $flight['flight']['iata'],
+                                'maskapai' => $flight['airline']['name']
+                            ];
+                        }
+                    }
+
+                    // Hanya simpan ke cache jika data dari API berhasil didapatkan (tidak kosong)
+                    if (!empty($tempFlights)) {
+                        $penerbanganAktif = collect($tempFlights)->unique('no_penerbangan')->values()->all();
+
+                        // Kunci data di cache selama 2 Jam (120 Menit)
+                        Cache::put($cacheKey, $penerbanganAktif, now()->addHours(2));
+                    }
+                }
+            } catch (\Exception $e) {
+                // Abaikan error jaringan API agar proses tetap berjalan lancar ke tahap fallback
+            }
         }
 
         // ====================================================================
-        // LOGIKA FALLBACK: JIKA API MATI / LIMIT HABIS, AMBIL DATA LOCAL DB
+        // LOGIKA FALLBACK LAYER: JIKA API LIMIT/OFFLINE, AMBIL DARI LOCAL DB
         // ====================================================================
         if (empty($penerbanganAktif)) {
-            // Ambil data pesawat dummy dari database lokal master_penerbangan
             $pesawatLokal = MasterPenerbangan::whereIn('status_penerbangan', ['Scheduled', 'Active'])->get();
+            $tempLokal = [];
 
             foreach ($pesawatLokal as $pesawat) {
-                $penerbanganAktif[] = [
+                $tempLokal[] = [
                     'id_kota_asal' => $pesawat->id_kota_asal,
                     'id_kota_tujuan' => $pesawat->id_kota_tujuan,
                     'no_penerbangan' => $pesawat->no_penerbangan,
                     'maskapai' => $pesawat->maskapai
                 ];
             }
+            $penerbanganAktif = collect($tempLokal)->unique('no_penerbangan')->values();
+        } else {
+            // Konversi kembali menjadi Collection agar kompatibel dengan perulangan Blade view Anda
+            $penerbanganAktif = collect($penerbanganAktif);
         }
-
-        // Hapus duplikat nomor penerbangan jika ada
-        $penerbanganAktif = collect($penerbanganAktif)->unique('no_penerbangan')->values();
 
         return view('admin.kelola-status-pengiriman', compact('diproses', 'tertunda', 'selesai', 'penerbanganAktif'));
     }
